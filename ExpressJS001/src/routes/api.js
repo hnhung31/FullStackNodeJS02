@@ -14,6 +14,8 @@ routerAPI.post("/login", handleLogin);
 routerAPI.get("/user", auth, getUser);
 routerAPI.get("/account", auth, getAccount);
 
+
+routerAPI.get('/search', productController.searchProducts); // Sửa thành /products/search và đặt lên trước
 routerAPI.get('/products', productController.getAllProducts);
 
 routerAPI.get('/categories', categoryController.getAllCategories);
