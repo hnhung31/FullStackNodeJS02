@@ -4,7 +4,6 @@ import { searchProductsApi, getCategoriesApi } from '../utils/api';
 
 const { Title } = Typography;
 const { Option } = Select;
-const { Search } = Input;
 
 const ProductPage = () => {
     const [products, setProducts] = useState([]);
@@ -42,7 +41,6 @@ const ProductPage = () => {
     }, [priceFilter]);
 
     useEffect(() => {
-        // Lấy danh sách danh mục
         const fetchCategories = async () => {
             try {
                 const res = await getCategoriesApi();
@@ -52,7 +50,6 @@ const ProductPage = () => {
             } catch (error) { console.error("Failed to fetch categories:", error); }
         };
         fetchCategories();
-        fetchProducts(1, filters); // Tải dữ liệu lần đầu
     }, []);
 
     useEffect(() => {
