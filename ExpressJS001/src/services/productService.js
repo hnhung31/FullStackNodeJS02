@@ -24,7 +24,7 @@ const getAllProductsService = async (page, pageSize, categoryId) => {
         return {
             EC: 0,
             EM: "Lấy danh sách sản phẩm thành công",
-            DT: {
+            data: {
                 products,
                 pagination: {
                     currentPage: page,

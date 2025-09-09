@@ -27,7 +27,18 @@ export const getProductsApi = (page, pageSize, category) => {
 export const getCategoriesApi = () => {
     return axios.get(`/v1/api/categories`);
 };
-export const searchProductsApi = (params) => {
-    const queryString = new URLSearchParams(params).toString();
-    return axios.get(`/v1/api/products/search?${queryString}`);
+
+export const searchProductsApi = (page, limit, category, searchTerm, sortBy, minPrice, maxPrice) => {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('limit', limit);
+
+    // Chỉ thêm tham số nếu nó có giá trị
+    if (category) params.append('category', category);
+    if (searchTerm) params.append('q', searchTerm);
+    if (sortBy) params.append('sortBy', sortBy);
+    if (minPrice) params.append('minPrice', minPrice);
+    if (maxPrice) params.append('maxPrice', maxPrice);
+
+    return axios.get(`/v1/api/search?${params.toString()}`);
 };
