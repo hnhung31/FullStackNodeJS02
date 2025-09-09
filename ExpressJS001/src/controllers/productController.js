@@ -10,6 +10,12 @@ const getAllProducts = async (req, res) => {
     return res.status(200).json(data);
 };
 
+const searchProducts = async (req, res) => {
+    const data = await searchProductsService(req.query);
+    return res.status(200).json(data);
+};
+
 module.exports = {
-    getAllProducts
+    getAllProducts,
+    searchProducts
 };

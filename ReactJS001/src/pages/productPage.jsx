@@ -1,119 +1,135 @@
-import { useState, useEffect } from 'react';
-import { List, Card, Spin, Select, Pagination, Typography, Col, Row } from 'antd';
-import { getProductsApi, getCategoriesApi } from '../utils/api';
+import { useState, useEffect, useCallback } from 'react';
+import { List, Card, Spin, Select, Pagination, Typography, Col, Row, Input, Slider, Button } from 'antd';
+import { getCategoriesApi, searchProductsApi } from '../utils/api';
+import debounce from 'lodash.debounce';
 
 const { Title } = Typography;
 const { Option } = Select;
+const { Search } = Input;
 
 const ProductPage = () => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [pagination, setPagination] = useState({
-        currentPage: 1,
-        pageSize: 4,
-        total: 0,
-        totalPages: 1,
+    const [pagination, setPagination] = useState({ currentPage: 1, pageSize: 8, total: 0 });
+
+    // State cho các bộ lọc
+    const [filters, setFilters] = useState({
+        q: '',
+        category: null,
+        minPrice: 0,
+        maxPrice: 100000000
     });
 
-    // Chạy 1 lần đầu để lấy danh sách danh mục
-    useEffect(() => {
-        const fetchCategories = async () => {
-            const res = await getCategoriesApi();
-            if (res && res.EC === 0) {
-                setCategories(res.DT);
-            }
-        };
-        fetchCategories();
-    }, []);
+    // Hàm gọi API tìm kiếm
+    const fetchProducts = async (page, currentFilters) => {
+        setLoading(true);
+        const params = { ...currentFilters, page, pageSize: pagination.pageSize };
+        
+        // Xóa các param rỗng để URL gọn gàng
+        Object.keys(params).forEach(key => {
+            if (!params[key] || params[key] === '') delete params[key];
+        });
 
-    // Effect này sẽ chạy mỗi khi page hoặc category thay đổi
-    useEffect(() => {
-        const fetchProducts = async () => {
-            setLoading(true);
-            const res = await getProductsApi(pagination.currentPage, pagination.pageSize, selectedCategory);
-            if (res && res.EC === 0) {
-                // *** Logic cho Lazy Loading: nối thêm sản phẩm vào danh sách cũ
-                // setProducts(prevProducts => [...prevProducts, ...res.DT.products]);
-
-                // *** Logic cho Phân trang: thay thế hoàn toàn danh sách sản phẩm
-                setProducts(res.DT.products);
-
-                setPagination(res.DT.pagination);
-            }
-            setLoading(false);
-        };
-
-        fetchProducts();
-    }, [pagination.currentPage, selectedCategory]);
-
-    const handleCategoryChange = (value) => {
-        setSelectedCategory(value);
-        setProducts([]); // Xóa sản phẩm cũ
-        setPagination(prev => ({ ...prev, currentPage: 1 })); // Reset về trang 1
+        const res = await searchProductsApi(params);
+        if (res && res.EC === 0) {
+            setProducts(res.DT.products);
+            setPagination(res.DT.pagination);
+        }
+        setLoading(false);
     };
 
-    const handlePageChange = (page, pageSize) => {
-        setPagination(prev => ({ ...prev, currentPage: page, pageSize: pageSize }));
+    // Dùng debounce để không gọi API liên tục khi người dùng gõ tìm kiếm
+    const debouncedFetch = useCallback(debounce((nextFilters) => fetchProducts(1, nextFilters), 500), []);
+
+    useEffect(() => {
+        // Lấy danh sách danh mục
+        const fetchCategories = async () => {
+            const res = await getCategoriesApi();
+            if (res && res.EC === 0) setCategories(res.DT);
+        };
+        fetchCategories();
+        fetchProducts(1, filters); // Tải dữ liệu lần đầu
+    }, []);
+
+    const handleFilterChange = (name, value) => {
+        const newFilters = { ...filters, [name]: value };
+        setFilters(newFilters);
+        debouncedFetch(newFilters); // Gọi API sau 500ms
+    };
+    
+    const handlePageChange = (page) => {
+        setPagination(p => ({ ...p, currentPage: page }));
+        fetchProducts(page, filters);
     };
 
     return (
         <div style={{ padding: '24px' }}>
             <Title level={2}>Danh sách sản phẩm</Title>
-            <Select
-                placeholder="Chọn danh mục"
-                style={{ width: 200, marginBottom: 24 }}
-                onChange={handleCategoryChange}
-                allowClear
-            >
-                {categories.map(cat => (
-                    <Option key={cat._id} value={cat._id}>{cat.name}</Option>
-                ))}
-            </Select>
-
-            <List
-                grid={{
-                    gutter: 16,
-                    xs: 1,
-                    sm: 2,
-                    md: 3,
-                    lg: 4,
-                    xl: 4,
-                    xxl: 4,
-                }}
-                dataSource={products}
-                renderItem={(item) => (
-                    <List.Item>
-                        <Card
-                            hoverable
-                            cover={<img alt={item.name} src={item.imageUrl || 'https://via.placeholder.com/150'} />}
-                        >
-                            <Card.Meta title={item.name} description={`${item.price.toLocaleString()} VNĐ`} />
-                        </Card>
-                    </List.Item>
-                )}
-            />
-
-            {loading && <div style={{ textAlign: 'center' }}><Spin /></div>}
-
-            {/* PHẦN HIỂN THỊ PHÂN TRANG - CHỌN 1 TRONG 2 CÁCH DƯỚI ĐÂY */}
-
-            {/* ========================================================== */}
-            {/* CÁCH 2: DÙNG PHÂN TRANG (PAGINATION) */}
-            {/* ========================================================== */}
-            <Row justify="center" style={{ marginTop: 24 }}>
-                <Col>
-                    <Pagination
-                        current={pagination.currentPage}
-                        pageSize={pagination.pageSize}
-                        total={pagination.total}
-                        onChange={handlePageChange}
-                        showSizeChanger
+            
+            {/* Filter Controls */}
+            <Row gutter={[16, 24]} style={{ marginBottom: 24 }}>
+                <Col xs={24} md={8}>
+                    <Search
+                        placeholder="Tìm kiếm sản phẩm (vd: ipone)..."
+                        onChange={e => handleFilterChange('q', e.target.value)}
+                        enterButton
+                    />
+                </Col>
+                <Col xs={24} md={6}>
+                    <Select
+                        placeholder="Chọn danh mục"
+                        style={{ width: '100%' }}
+                        onChange={value => handleFilterChange('category', value)}
+                        allowClear
+                    >
+                        {categories.map(cat => <Option key={cat._id} value={cat._id}>{cat.name}</Option>)}
+                    </Select>
+                </Col>
+                <Col xs={24} md={10}>
+                    <Typography.Text>Lọc theo giá (0 - 100 triệu):</Typography.Text>
+                    <Slider
+                        range
+                        min={0}
+                        max={100000000}
+                        step={1000000}
+                        defaultValue={[0, 100000000]}
+                        onChangeComplete={([min, max]) => {
+                            const newFilters = { ...filters, minPrice: min, maxPrice: max };
+                            setFilters(newFilters);
+                            fetchProducts(1, newFilters);
+                        }}
+                        tooltip={{ formatter: value => `${(value / 1000000).toLocaleString()} triệu` }}
                     />
                 </Col>
             </Row>
 
+            {loading ? <div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div> : (
+                <List
+                    grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4 }}
+                    dataSource={products}
+                    renderItem={item => (
+                        <List.Item>
+                            <Card
+                                hoverable
+                                cover={<img alt={item.name} src={item.imageUrl || 'https://via.placeholder.com/200'} style={{ height: 200, objectFit: 'cover' }} />}
+                            >
+                                <Card.Meta title={item.name} description={`${item.price.toLocaleString()} VNĐ`} />
+                            </Card>
+                        </List.Item>
+                    )}
+                />
+            )}
+            
+            <Row justify="center" style={{ marginTop: 24 }}>
+                <Pagination
+                    current={pagination.currentPage}
+                    pageSize={pagination.pageSize}
+                    total={pagination.total}
+                    onChange={handlePageChange}
+                    showSizeChanger={false}
+                />
+            </Row>
         </div>
     );
 };

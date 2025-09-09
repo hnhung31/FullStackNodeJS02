@@ -17,4 +17,6 @@ routerAPI.get("/account", auth, getAccount);
 routerAPI.get('/products', productController.getAllProducts);
 
 routerAPI.get('/categories', categoryController.getAllCategories);
+routerAPI.get('/products/search', productController.searchProducts);
+
 module.exports = routerAPI;

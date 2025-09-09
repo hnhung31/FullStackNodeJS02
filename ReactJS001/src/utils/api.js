@@ -27,3 +27,7 @@ export const getProductsApi = (page, pageSize, category) => {
 export const getCategoriesApi = () => {
     return axios.get(`/v1/api/categories`);
 };
+export const searchProductsApi = (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return axios.get(`/v1/api/products/search?${queryString}`);
+};
