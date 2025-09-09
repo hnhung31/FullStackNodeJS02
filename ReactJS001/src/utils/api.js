@@ -15,3 +15,15 @@ export const getAccountApi = () => {
 export const getUsersApi = (page = 1, pageSize = 10) => {
     return axios.get(`/v1/api/user?page=${page}&pageSize=${pageSize}`);
 };
+
+export const getProductsApi = (page, pageSize, category) => {
+    let url = `/v1/api/products?page=${page}&pageSize=${pageSize}`;
+    if (category) {
+        url += `&category=${category}`;
+    }
+    return axios.get(url);
+};
+
+export const getCategoriesApi = () => {
+    return axios.get(`/v1/api/categories`);
+};

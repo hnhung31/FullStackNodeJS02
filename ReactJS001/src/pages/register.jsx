@@ -7,34 +7,35 @@ const RegisterPage = () => {
     const navigate = useNavigate();
 
     const onFinish = async (values) => {
-        const { name, email, password } = values;
-        try {
-            const res = await createUserApi(name, email, password);
-            console.log('Register response:', res);
-            if (res.data && res.data._id) {
-                notification.success({
-                    message: 'Đăng ký thành công',
-                    description: 'Bạn đã đăng ký tài khoản thành công. Vui lòng đăng nhập.',
-                });
-                navigate('/login');
-            } else if (res.data === null) {
-                notification.error({
-                    message: 'Đăng ký thất bại',
-                    description: 'Email đã tồn tại, vui lòng chọn email khác',
-                });
-            } else {
-                notification.error({
-                    message: 'Đăng ký thất bại',
-                    description: 'Có lỗi xảy ra, vui lòng thử lại sau',
-                });
-            }
-        } catch (error) {
-            console.error('Register error:', error);
+    const { name, email, password } = values;
+    try {
+        // Giả sử createUserApi trả về trực tiếp `res.data` từ axios
+        const res = await createUserApi(name, email, password); 
+        
+        // Bây giờ chỉ cần kiểm tra mã lỗi (EC)
+        if (res && res.EC === 0) {
+            // Thành công
+            notification.success({
+                message: 'Đăng ký thành công',
+                description: 'Bạn đã đăng ký tài khoản thành công. Vui lòng đăng nhập.',
+            });
+            navigate('/login');
+        } else {
+            // Thất bại, hiển thị thông báo lỗi (EM) từ chính backend
             notification.error({
-                message: 'Có lỗi xảy ra khi đăng ký',
+                message: 'Đăng ký thất bại',
+                description: res.EM || 'Có lỗi xảy ra, vui lòng thử lại sau',
             });
         }
-    };
+    } catch (error) {
+        // Xử lý lỗi mạng hoặc lỗi server nghiêm trọng (status 500)
+        console.error('Register error:', error);
+        notification.error({
+            message: 'Đăng ký thất bại',
+            description: error.response?.data?.EM || 'Có lỗi kết nối đến máy chủ.',
+        });
+    }
+};
 
     return (
         <Row justify="center" align="middle" style={{ minHeight: '100vh', background: '#f5f5f5' }}>

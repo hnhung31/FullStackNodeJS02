@@ -1,5 +1,7 @@
 const express = require('express');
 const { createUser, handleLogin, getUser, getAccount } = require('../controllers/userController');
+const productController = require('../controllers/productController');
+const categoryController = require('../controllers/categoryController');
 const auth = require('../middleware/auth');
 
 const routerAPI = express.Router();
@@ -12,4 +14,7 @@ routerAPI.post("/login", handleLogin);
 routerAPI.get("/user", auth, getUser);
 routerAPI.get("/account", auth, getAccount);
 
+routerAPI.get('/products', productController.getAllProducts);
+
+routerAPI.get('/categories', categoryController.getAllCategories);
 module.exports = routerAPI;
