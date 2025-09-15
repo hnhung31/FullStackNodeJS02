@@ -25,10 +25,6 @@ const syncData = async () => {
         const body = products.flatMap(doc => {
             const { _id, ...productData } = doc;
 
-            if (productData.category && typeof productData.category === 'object' && productData.category.name) {
-                productData.category = productData.category.name;
-            }
-
             return [
                 { index: { _index: 'products', _id: _id.toString() } },
                 productData

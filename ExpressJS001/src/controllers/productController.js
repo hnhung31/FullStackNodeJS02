@@ -38,7 +38,7 @@ const searchProducts = async (req, res) => {
         if (category) {
             filterClauses.push({
                 match: { 
-                    "category": category
+                    "category.name": category
                 }
             });
         }
