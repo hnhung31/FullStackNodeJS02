@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const ViewedProduct = require('../models/viewedProduct');
 const esClient = require('../../es-config');
 
 const getAllProductsService = async (page, pageSize, categoryId) => {
@@ -40,70 +41,159 @@ const getAllProductsService = async (page, pageSize, categoryId) => {
         return { EC: -1, EM: "Lỗi server khi lấy sản phẩm" };
     }
 };
-const searchProductsService = async (params) => {
-    const { q, category, minPrice, maxPrice, page = 1, pageSize = 8 } = params;
-    
-    const mustQueries = [];
-    const filterQueries = [];
 
-    // 1. FUZZY SEARCH trên tên sản phẩm
+const searchProductsService = async (params) => {
+    const { 
+        q, category, minPrice, maxPrice, sortBy, 
+        page = 1, limit = 5 
+    } = params;
+    
+    const mustClauses = [];
+    const filterClauses = [];
+
+    // 1. TÌM KIẾM MỜ (Fuzzy Search)
     if (q) {
-        mustQueries.push({
-            match: {
-                name: {
-                    query: q,
-                    fuzziness: "AUTO" // Phép màu nằm ở đây!
-                }
+        mustClauses.push({
+            multi_match: {
+                query: q,
+                fields: ["name", "description"],
+                fuzziness: "AUTO" 
             }
         });
     }
 
-    // 2. LỌC theo danh mục, giá,...
+    // 2. LỌC (Filtering)
     if (category) {
-        filterQueries.push({ term: { "category._id": category } });
+        filterClauses.push({ term: { "category._id": category } });
     }
     if (minPrice || maxPrice) {
-        const rangeQuery = {};
-        if (minPrice) rangeQuery.gte = parseFloat(minPrice);
-        if (maxPrice) rangeQuery.lte = parseFloat(maxPrice);
-        filterQueries.push({ range: { price: rangeQuery } });
+        const priceRange = {};
+        if (minPrice) priceRange.gte = parseFloat(minPrice);
+        if (maxPrice) priceRange.lte = parseFloat(maxPrice);
+        filterClauses.push({ range: { price: priceRange } });
+    }
+    
+    // 3. SẮP XẾP (Sorting)
+    let sortOption = [{ "_score": "desc" }];
+    if (sortBy) {
+        if (sortBy === 'price_asc') sortOption = [{ "price": "asc" }];
+        if (sortBy === 'price_desc') sortOption = [{ "price": "desc" }];
     }
 
+    // 4. PHÂN TRANG (Pagination)
+    const from = (Number(page) - 1) * Number(limit);
+
     try {
-        const { body } = await esClient.search({
+        const esQueryBody = {
+            query: {
+                bool: {
+                    must: mustClauses.length > 0 ? mustClauses : { match_all: {} },
+                    filter: filterClauses
+                }
+            },
+            sort: sortOption,
+            from: from,
+            size: Number(limit)
+        };
+        
+        console.log(">>> Service is sending this query to ES:", JSON.stringify(esQueryBody, null, 2));
+
+        const response = await esClient.search({
             index: 'products',
-            from: (page - 1) * pageSize,
-            size: pageSize,
+            body: esQueryBody
+        });
+
+        const products = response.hits.hits.map(hit => hit._source);
+        const totalProducts = response.hits.total.value;
+        
+        return {
+            EC: 0, EM: "Tìm kiếm thành công",
+            data: {
+                products,
+                pagination: {
+                    page: Number(page),
+                    limit: Number(limit),
+                    total: totalProducts,
+                    totalPages: Math.ceil(totalProducts / Number(limit))
+                }
+            }
+        };
+    } catch (error) {
+        console.error("Lỗi Elasticsearch trong Service: ", error);
+        return { EC: -1, EM: "Lỗi server khi tìm kiếm sản phẩm" };
+    }
+};
+
+const getProductByIdService = async (productId, userId) => {
+    try {
+        const product = await Product.findById(productId).populate('category');
+        if (!product) {
+            return { EC: 1, EM: "Không tìm thấy sản phẩm" };
+        }
+
+        // 1. Tăng bộ đếm lượt xem công khai
+        product.views += 1;
+        await product.save();
+
+        // 2. Nếu user đã đăng nhập, ghi lại lịch sử xem cá nhân
+        if (userId) {
+            await ViewedProduct.findOneAndUpdate(
+                { user: userId, product: productId },
+                { viewedAt: new Date() },
+                { upsert: true } // Tạo mới nếu chưa có, cập nhật nếu đã có
+            );
+        }
+
+        return { EC: 0, EM: "Lấy chi tiết sản phẩm thành công", data: product };
+    } catch (error) {
+        console.log(error);
+        return { EC: -1, EM: "Lỗi server" };
+    }
+};
+
+const getSimilarProductsService = async (productId) => {
+    try {
+        const product = await Product.findById(productId).populate('category');
+        if (!product) {
+            return { EC: 1, EM: "Sản phẩm không tồn tại" };
+        }
+
+        const response = await esClient.search({
+            index: 'products',
             body: {
+                size: 5, // Lấy 5 sản phẩm tương tự
                 query: {
                     bool: {
-                        must: mustQueries, // Các điều kiện TÌM KIẾM
-                        filter: filterQueries // Các điều kiện LỌC
+                        must_not: { term: { "_id": productId } },
+                        should: [
+                            { term: { "category._id": product.category._id.toString() } },
+                            { multi_match: { query: product.name, fields: ["name", "description"], fuzziness: "AUTO" } }
+                        ]
                     }
                 }
             }
         });
 
-        const products = body.hits.hits.map(hit => hit._source);
-        const totalProducts = body.hits.total.value;
-        
-        return {
-            EC: 0, EM: "Tìm kiếm thành công",
-            DT: {
-                products,
-                pagination: {
-                    currentPage: page, pageSize,
-                    total: totalProducts,
-                    totalPages: Math.ceil(totalProducts / pageSize)
-                }
-            }
-        };
+        const similarProducts = response.hits.hits.map(hit => hit._source);
+        return { EC: 0, EM: "Lấy sản phẩm tương tự thành công", data: similarProducts };
     } catch (error) {
-        console.error("Lỗi Elasticsearch: ", error.meta.body.error);
-        return { EC: -1, EM: "Lỗi server khi tìm kiếm sản phẩm" };
+        console.error("Lỗi Elasticsearch: ", error);
+        return { EC: -1, EM: "Lỗi server khi tìm sản phẩm tương tự" };
     }
+};
+
+const incrementPurchaseCount = async (productId) => {
+    await Product.findByIdAndUpdate(productId, { $inc: { purchases: 1 } });
+};
+
+const incrementCommentCount = async (productId) => {
+    await Product.findByIdAndUpdate(productId, { $inc: { commentsCount: 1 } });
 };
 module.exports = {
     getAllProductsService,
-    searchProductsService
+    searchProductsService,
+    getProductByIdService,
+    getSimilarProductsService,
+    incrementPurchaseCount,
+    incrementCommentCount
 };

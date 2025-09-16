@@ -42,3 +42,24 @@ export const searchProductsApi = (page, limit, category, searchTerm, sortBy, min
 
     return axios.get(`/v1/api/search?${params.toString()}`);
 };
+
+export const getProductByIdApi = (productId) => {
+    return axios.get(`/api/products/${productId}`);
+};
+
+export const getSimilarProductsApi = (productId) => {
+    return axios.get(`/api/products/${productId}/similar`);
+};
+
+export const getFavoriteProductsApi = (page = 1, limit = 10) => {
+    return axios.get(`/api/favorites?page=${page}&limit=${limit}`);
+};
+
+export const toggleFavoriteApi = (productId) => {
+    return axios.post('/api/favorites/toggle', { productId });
+};
+
+
+export const getViewedProductsApi = (page = 1, limit = 5) => {
+    return axios.get(`/api/viewed-products?page=${page}&limit=${limit}`);
+};

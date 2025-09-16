@@ -1,5 +1,5 @@
 import { Menu, message } from 'antd';
-import { UserOutlined, HomeOutlined, LoginOutlined, LogoutOutlined, UserAddOutlined } from '@ant-design/icons';
+import { UserOutlined, HomeOutlined, LoginOutlined, LogoutOutlined, UserAddOutlined, HeartOutlined } from '@ant-design/icons';
 import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth.context';
@@ -21,6 +21,9 @@ const Header = () => {
             navigate('/profile');
         } else if (e.key === 'users') {
             navigate('/users');
+        } 
+        if (e.key === 'favorites') {
+            navigate('/favorites');
         } else if (e.key === 'logout') {
             localStorage.removeItem('access_token');
             setAuth({

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { List, Card, Spin, Select, Pagination, Typography, Col, Row, Input, InputNumber, Space } from 'antd';
 import { searchProductsApi, getCategoriesApi } from '../utils/api';
+import ViewedProducts from '../components/pages/ViewedProducts'; // MỚI
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -20,7 +21,7 @@ const ProductPage = () => {
     
     const [pagination, setPagination] = useState({
         currentPage: 1,
-        pageSize: 8,
+        pageSize: 5,
         total: 0,
     });
 
@@ -66,11 +67,9 @@ const ProductPage = () => {
                     debouncedPriceFilter.max
                 );
                 
-                // === SỬA LẠI THEO ĐÚNG CẤU TRÚC RESPONSE ĐÃ BÓC VỎ ===
                 const productsData = res?.data?.products;
                 const paginationData = res?.data?.pagination;
 
-                // res bây giờ là response đã được bóc vỏ, nên check res.EC trực tiếp
                 if (res && res.EC === 0 && Array.isArray(productsData)) {
                     setProducts(productsData);
                     setPagination(prev => ({ ...prev, total: paginationData.total }));
@@ -100,6 +99,7 @@ const ProductPage = () => {
 
     return (
         <div style={{ padding: '24px' }}>
+            <ViewedProducts />
             <Title level={2}>Danh sách sản phẩm</Title>
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }} align="bottom">
                 <Col>
