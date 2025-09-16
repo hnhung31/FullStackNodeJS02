@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Row, Col, Image, Typography, Spin, Divider, Statistic, Button, message, List, Card } from 'antd';
 import { EyeOutlined, ShoppingCartOutlined, MessageOutlined, HeartOutlined, HeartFilled } from '@ant-design/icons';
 import { getProductByIdApi, getSimilarProductsApi, toggleFavoriteApi } from '../utils/api';
-import { AuthContext } from '../context/auth.context';
+import { AuthContext } from '../components/context/auth.context';
 
 const { Title, Text, Paragraph } = Typography;
 

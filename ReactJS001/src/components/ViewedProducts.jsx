@@ -3,7 +3,7 @@ import { useState, useEffect, useContext } from 'react';
 import { List, Card, Typography, Spin } from 'antd';
 import { Link } from 'react-router-dom';
 import { getViewedProductsApi } from '../utils/api';
-import { AuthContext } from '../context/auth.context';
+import { AuthContext } from '../components/context/auth.context';
 
 const { Title } = Typography;
 

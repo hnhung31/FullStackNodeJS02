@@ -21,8 +21,7 @@ const Header = () => {
             navigate('/profile');
         } else if (e.key === 'users') {
             navigate('/users');
-        } 
-        if (e.key === 'favorites') {
+        } else if (e.key === 'favorites') {
             navigate('/favorites');
         } else if (e.key === 'logout') {
             localStorage.removeItem('access_token');
@@ -40,6 +39,11 @@ const Header = () => {
             label: 'Home',
             key: 'home',
             icon: <HomeOutlined />,
+        },
+        {
+            label: 'Yêu thích',
+            key: 'favorites',
+            icon: <HeartOutlined />,
         },
         {
             label: `Xin chào, ${auth.user.name}`,

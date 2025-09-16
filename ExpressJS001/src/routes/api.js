@@ -24,12 +24,12 @@ routerAPI.get('/products', productController.getAllProducts);
 routerAPI.get('/categories', categoryController.getAllCategories);
 routerAPI.get('/products/search', productController.searchProducts);
 
-router.get('/:id', productController.getProductById);
-router.get('/:id/similar', productController.getSimilarProducts);
+routerAPI.get('/products/:id', productController.getProductById);
+routerAPI.get('/products/:id/similar', productController.getSimilarProducts);
 
-router.get('/', auth, favoriteController.getFavoriteProducts);
-router.post('/toggle', auth, favoriteController.toggleFavorite);
+routerAPI.get('/favorites', auth, favoriteController.getFavoriteProducts);
+routerAPI.post('/favorites/toggle', auth, favoriteController.toggleFavorite);
 
-router.get('/', authMiddleware, viewedProductController.getViewedProducts);
+routerAPI.get('/viewed-products', auth, viewedProductController.getViewedProducts);
 
 module.exports = routerAPI;

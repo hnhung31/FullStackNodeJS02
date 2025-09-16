@@ -10,7 +10,8 @@ import UsersPage from './pages/users.jsx';
 import ProfilePage from './pages/profile.jsx';
 import { AuthWrapper } from './components/context/auth.context.jsx';
 import { ConfigProvider } from 'antd';
-
+import FavoriteProductsPage from './pages/FavoriteProductsPage.jsx';
+import ProductDetailPage from './pages/ProductDetailPage.jsx';
 const router = createBrowserRouter([
     {
         path: "/",
@@ -19,7 +20,17 @@ const router = createBrowserRouter([
             { index: true, element: <HomePage /> },
             { path: 'users', element: <UsersPage /> },
             { path: 'profile', element: <ProfilePage /> },
+            { path: "product/:id", element: <ProductDetailPage /> }, 
+            { path: "favorites", element: <FavoriteProductsPage /> },
         ],
+    },
+    {
+        path: "product/:id",
+        element: <ProductDetailPage />,
+    },
+    {
+        path: "favorites",
+        element: <FavoriteProductsPage />,
     },
     {
         path: "/login",

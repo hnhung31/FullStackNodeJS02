@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { List, Card, Spin, Select, Pagination, Typography, Col, Row, Input, InputNumber, Space } from 'antd';
 import { searchProductsApi, getCategoriesApi } from '../utils/api';
-import ViewedProducts from '../components/pages/ViewedProducts'; // MỚI
-
+import ViewedProducts from '../components/ViewedProducts'; // MỚI
+import { Link } from 'react-router-dom';
 const { Title } = Typography;
 const { Option } = Select;
 
@@ -151,12 +151,14 @@ const ProductPage = () => {
                         dataSource={products}
                         renderItem={(item) => (
                             <List.Item key={item._id}>
-                                <Card
-                                    hoverable
-                                    cover={<img alt={item.name} src={item.imageUrl || 'https://via.placeholder.com/250'} style={{ height: 250, objectFit: 'cover' }} />}
-                                >
-                                    <Card.Meta title={item.name} description={`${item.price ? item.price.toLocaleString() : 'N/A'} VNĐ`} />
-                                </Card>
+                                <Link to={`/product/${item._id}`}>
+                                    <Card
+                                        hoverable
+                                        cover={<img alt={item.name} src={item.imageUrl || 'https://via.placeholder.com/250'} style={{ height: 250, objectFit: 'cover' }} />}
+                                    >
+                                        <Card.Meta title={item.name} description={`${item.price ? item.price.toLocaleString() : 'N/A'} VNĐ`} />
+                                    </Card>
+                                </Link>
                             </List.Item>
                         )}
                         locale={{ emptyText: 'Không tìm thấy sản phẩm nào' }}

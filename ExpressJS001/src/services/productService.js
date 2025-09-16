@@ -103,7 +103,12 @@ const searchProductsService = async (params) => {
             body: esQueryBody
         });
 
-        const products = response.hits.hits.map(hit => hit._source);
+        const products = response.hits.hits.map(hit => {
+            return {
+                ...hit._source, // Lấy tất cả các trường trong _source
+                _id: hit._id     // Thêm trường _id từ cấp cao hơn
+            };
+        });
         const totalProducts = response.hits.total.value;
         
         return {
