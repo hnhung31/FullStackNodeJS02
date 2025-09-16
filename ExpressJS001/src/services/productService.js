@@ -140,13 +140,24 @@ const getProductByIdService = async (productId, userId) => {
         product.views += 1;
         await product.save();
 
-        // 2. Nếu user đã đăng nhập, ghi lại lịch sử xem cá nhân
+        console.log("--- [getProductByIdService] Attempting to save viewed history ---");
+        console.log("--- [getProductByIdService] Received Product ID:", productId);
+        console.log("--- [getProductByIdService] Received User ID:", userId); // XEM GIÁ TRỊ NÀY LÀ GÌ
+        
         if (userId) {
-            await ViewedProduct.findOneAndUpdate(
-                { user: userId, product: productId },
-                { viewedAt: new Date() },
-                { upsert: true } // Tạo mới nếu chưa có, cập nhật nếu đã có
-            );
+            console.log("--- [getProductByIdService] User is logged in. Saving to DB...");
+            try {
+                const history = await ViewedProduct.findOneAndUpdate(
+                    { user: userId, product: productId },
+                    { viewedAt: new Date() },
+                    { upsert: true, new: true }
+                );
+                console.log("--- [getProductByIdService] DB operation successful:", history);
+            } catch (dbError) {
+                console.error("--- [getProductByIdService] !!! DATABASE ERROR:", dbError);
+            }
+        } else {
+            console.log("--- [getProductByIdService] User is not logged in. Skipping.");
         }
 
         return { EC: 0, EM: "Lấy chi tiết sản phẩm thành công", data: product };
@@ -166,7 +177,7 @@ const getSimilarProductsService = async (productId) => {
         const response = await esClient.search({
             index: 'products',
             body: {
-                size: 5, // Lấy 5 sản phẩm tương tự
+                size: 5, 
                 query: {
                     bool: {
                         must_not: { term: { "_id": productId } },
@@ -179,7 +190,12 @@ const getSimilarProductsService = async (productId) => {
             }
         });
 
-        const similarProducts = response.hits.hits.map(hit => hit._source);
+        const similarProducts = response.hits.hits.map(hit => {
+            return {
+                ...hit._source,
+                _id: hit._id    
+            };
+        });
         return { EC: 0, EM: "Lấy sản phẩm tương tự thành công", data: similarProducts };
     } catch (error) {
         console.error("Lỗi Elasticsearch: ", error);

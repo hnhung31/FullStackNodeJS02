@@ -1,33 +1,34 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
-const auth = (req, res, next) => {
-    const white_lists = ["/", "/register", "/login"];
-    if (white_lists.find(item => '/v1/api' + item === req.originalUrl)) {
-        next();
-    } else {
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-            const token = authHeader.split(' ')[1];
-            try {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                req.user = {
-                    email: decoded.email,
-                    name: decoded.name,
-                };
-                console.log(">>> check token:", decoded);
-                next();
-            } catch (error) {
-                return res.status(401).json({
-                    message: "Token bị hết hạn/hoặc không hợp lệ"
-                });
-            }
-        } else {
-            return res.status(401).json({
-                message: "Bạn chưa truyền Access Token ở header/Hoặc token bị hết hạn"
-            });
+const verifyTokenAndSetUser = (req) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = decoded;
+            return true;
+        } catch (error) {
+            return false;
         }
     }
+    return false;
 };
 
-module.exports = auth;
+const required = (req, res, next) => {
+    if (verifyTokenAndSetUser(req)) {
+        return next();
+    }
+    return res.status(401).json({ EC: -1, EM: "Yêu cầu xác thực không hợp lệ." });
+};
+
+const optional = (req, res, next) => {
+    verifyTokenAndSetUser(req);
+    next();
+};
+
+module.exports = {
+    required,
+    optional
+};

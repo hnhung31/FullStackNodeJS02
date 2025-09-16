@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { List, Card, Spin, Select, Pagination, Typography, Col, Row, Input, InputNumber, Space } from 'antd';
 import { searchProductsApi, getCategoriesApi } from '../utils/api';
-import ViewedProducts from '../components/ViewedProducts'; // MỚI
+import ViewedProducts from '../components/ViewedProducts';
 import { Link } from 'react-router-dom';
 const { Title } = Typography;
 const { Option } = Select;

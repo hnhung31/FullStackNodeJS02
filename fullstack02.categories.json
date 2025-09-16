@@ -1,0 +1,24 @@
+[{
+  "_id": {
+    "$oid": "65f01a7b8c7b8e1f5a8e1b21"
+  },
+  "name": "Điện thoại"
+},
+{
+  "_id": {
+    "$oid": "65f01a7b8c7b8e1f5a8e1b22"
+  },
+  "name": "Laptop"
+},
+{
+  "_id": {
+    "$oid": "65f01a7b8c7b8e1f5a8e1b23"
+  },
+  "name": "Máy tính bảng"
+},
+{
+  "_id": {
+    "$oid": "65f01a7b8c7b8e1f5a8e1b24"
+  },
+  "name": "Phụ kiện"
+}]

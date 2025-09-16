@@ -25,7 +25,7 @@ const searchProducts = async (req, res) => {
 };
 const getProductById = async (req, res) => {
     const productId = req.params.id;
-    const userId = req.user ? req.user.id : null; 
+    const userId = req.user ? req.user._id : null; 
     const result = await getProductByIdService(productId, userId);
     return res.status(result.EC === 0 ? 200 : 404).json(result);
 };

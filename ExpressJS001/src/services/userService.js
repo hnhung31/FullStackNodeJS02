@@ -32,7 +32,7 @@ const loginService = async (email, password) => {
             if (!isMatchPassword) {
                 return { EC: 2, EM: "Email/Password không hợp lệ" };
             } else {
-                const payload = { email: user.email, name: user.name };
+                const payload = { _id: user._id, email: user.email, name: user.name };
                 const access_token = jwt.sign(
                     payload,
                     process.env.JWT_SECRET,

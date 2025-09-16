@@ -14,8 +14,8 @@ routerAPI.post("/register", createUser);
 routerAPI.post("/login", handleLogin);
 
 // Các routes cần xác thực token
-routerAPI.get("/user", auth, getUser);
-routerAPI.get("/account", auth, getAccount);
+routerAPI.get("/user", auth.required, getUser);
+routerAPI.get("/account", auth.required, getAccount);
 
 
 routerAPI.get('/search', productController.searchProducts);
@@ -24,12 +24,12 @@ routerAPI.get('/products', productController.getAllProducts);
 routerAPI.get('/categories', categoryController.getAllCategories);
 routerAPI.get('/products/search', productController.searchProducts);
 
-routerAPI.get('/products/:id', productController.getProductById);
+routerAPI.get('/products/:id', auth.optional, productController.getProductById);
 routerAPI.get('/products/:id/similar', productController.getSimilarProducts);
 
-routerAPI.get('/favorites', auth, favoriteController.getFavoriteProducts);
-routerAPI.post('/favorites/toggle', auth, favoriteController.toggleFavorite);
+routerAPI.get('/favorites', auth.required, favoriteController.getFavoriteProducts);
+routerAPI.post('/favorites/toggle', auth.required, favoriteController.toggleFavorite);
 
-routerAPI.get('/viewed-products', auth, viewedProductController.getViewedProducts);
+routerAPI.get('/viewed-products', auth.required, viewedProductController.getViewedProducts);
 
 module.exports = routerAPI;

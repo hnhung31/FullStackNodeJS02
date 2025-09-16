@@ -47,7 +47,7 @@ const ProductDetailPage = () => {
         };
 
         fetchProductDetails();
-        window.scrollTo(0, 0); 
+        window.scrollTo(0, 0);
     }, [id, auth]);
 
     const handleToggleFavorite = async () => {
@@ -55,11 +55,15 @@ const ProductDetailPage = () => {
             message.warn("Vui lòng đăng nhập để thực hiện chức năng này.");
             return;
         }
-        setIsFavorited(prev => !prev); 
+        setIsFavorited(prev => !prev);
         try {
             const res = await toggleFavoriteApi(id);
             if (res && res.EC === 0) {
                 message.success(res.EM);
+            } else {
+                // Nếu API trả về lỗi logic, hoàn tác lại trạng thái
+                message.error(res.EM || "Đã có lỗi xảy ra.");
+                setIsFavorited(prev => !prev);
             }
         } catch (error) {
             message.error("Đã có lỗi xảy ra.");
@@ -94,10 +98,10 @@ const ProductDetailPage = () => {
                         <Col><Statistic title="Bình luận" value={product.commentsCount} prefix={<MessageOutlined />} /></Col>
                     </Row>
                     <Divider />
-                    <Button 
-                        type="primary" 
-                        danger 
-                        icon={isFavorited ? <HeartFilled /> : <HeartOutlined />} 
+                    <Button
+                        type="primary"
+                        danger
+                        icon={isFavorited ? <HeartFilled /> : <HeartOutlined />}
                         size="large"
                         onClick={handleToggleFavorite}
                     >
@@ -115,7 +119,7 @@ const ProductDetailPage = () => {
                 renderItem={(item) => (
                     <List.Item key={item._id}>
                         <Link to={`/product/${item._id}`}>
-                             <Card
+                            <Card
                                 hoverable
                                 cover={<img alt={item.name} src={item.imageUrl || 'https://via.placeholder.com/250'} style={{ height: 250, objectFit: 'cover' }} />}
                             >
